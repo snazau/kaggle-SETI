@@ -1,5 +1,7 @@
 # Custom
+checkpoints/*
 data/*
+FMix/*
 runs/*
 SpecAugment/*
 submissions/*
