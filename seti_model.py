@@ -28,26 +28,26 @@ class SETIModel(torch.nn.Module):
         self.model_name = model_name
         self.model = timm.create_model(self.model_name, pretrained=pretrained, in_chans=in_channels)
         self.dropout = torch.nn.Dropout(0.5)
+
         # dm_nfnet_f#
-        if self.model_name.startswith("dm_nfnet"):
+        if "nfnet" in self.model_name:
             self.n_features = self.model.head.fc.in_features
-            self.model.head.fc = torch.nn.Linear(self.n_features, num_classes)
-        elif self.model_name.startswith("tf_efficientnetv2"):
-            # tf_efficientnetv2_b#
+            self.model.head.fc = torch.nn.Identity()
+            self.head = torch.nn.Linear(self.n_features, num_classes)
+        elif "efficientnet" in self.model_name:
             self.n_features = self.model.classifier.in_features
-            self.model.classifier = torch.nn.Linear(self.n_features, num_classes)
-        elif self.model_name.startswith("efficientnet"):
-            # tf_efficientnetv2_b#
-            self.n_features = self.model.classifier.in_features
-            self.model.classifier = torch.nn.Linear(self.n_features, num_classes)
+            self.model.classifier = torch.nn.Identity()
+            self.head = torch.nn.Linear(self.n_features, num_classes)
         elif "resnet" in self.model_name:
             self.n_features = self.model.fc.in_features
-            self.model.fc = torch.nn.Linear(self.n_features, num_classes)
+            self.model.fc = torch.nn.Identity()
+            self.head = torch.nn.Linear(self.n_features, num_classes)
 
-        print(self.model)
+        # print(self.model)
 
     def forward(self, x):
-        output = self.model(x)
+        feature_vector = self.model(x)
+        output = self.head(self.dropout(feature_vector))
         return output
 
 
@@ -123,8 +123,9 @@ if __name__ == "__main__":
     input_tensor = torch.randn((1, 6, 273, 256))
     # model = DenseNet(in_channels=6, num_classes=1, pretrained=False)
     # model = SETIModel(model_name=config.model_name, in_channels=6, num_classes=1, pretrained=True)
-    # model = SETIModel(model_name="resnet18d", in_channels=6, num_classes=1, pretrained=True)
-    model = SETIModel(model_name="tf_efficientnet_b1_ns", in_channels=6, num_classes=1, pretrained=True)
+    model = SETIModel(model_name="dm_nfnet_f0", in_channels=6, num_classes=1, pretrained=True)
+    # model = SETIModel(model_name="tf_efficientnet_b1_ns", in_channels=6, num_classes=1, pretrained=True)
+    print(model)
     print("Model", model.model_name)
     output = model(input_tensor)
     print("output", output)
