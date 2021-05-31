@@ -25,6 +25,7 @@ test_batch_size = 128
 n_loader_workers = 4
 # pos_weights_train = [9.687047294418406]
 pos_weights_train = [1.0]
+mix_strategy = "MixUp"  # {None, "FMix", "MixUp"}
 
 # lr
 lr_scheduler_name = "CosineAnnealingLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR"]
@@ -35,7 +36,7 @@ lr_reduce_on_plateau_patience = 3
 lr_cosine_annealing_min_lr = 5e-6
 lr_cosine_annealing_T_max = epochs_amount
 
-run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_CoarseDropout_RndPermut".format(
+run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_{}".format(
     curr_date,
     model_name,
     str(model_pretrained)[0],
@@ -48,6 +49,7 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(pos_weights_train),
     "BCE",
     lr_scheduler_name,
+    mix_strategy,
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

@@ -7,6 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 import sklearn.metrics
 from sklearn.model_selection import StratifiedKFold
 
+import augmentations
 import config
 import dataset
 import seti_model
@@ -25,13 +26,26 @@ def train(dataloader, model, criterion, optimizer, epoch, fold, writer):
         npy_paths = sample["npy_path"]
 
         optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels.unsqueeze(1))
+        if config.mix_strategy is not None:
+            if config.mix_strategy is "MixUp":
+                mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=1.0)
+            elif config.mix_strategy is "FMix":
+                mixed_inputs, labels, labels_shuffled, lam = augmentations.fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=config.device)
+            else:
+                raise NotImplementedError
+            mixed_outputs = model(mixed_inputs)
+            loss = lam * criterion(mixed_outputs, labels.unsqueeze(1)) + (1 - lam) * criterion(mixed_outputs, labels_shuffled.unsqueeze(1))
+        else:
+            outputs = model(inputs)
+            loss = criterion(outputs, labels.unsqueeze(1))
         loss.backward()
         optimizer.step()
 
         loss_avg += loss.item()
 
+        if config.mix_strategy is not None:
+            with torch.no_grad():
+                outputs = model(inputs)
         probs = torch.sigmoid(outputs)
 
         all_labels = np.concatenate([all_labels, labels.cpu().detach().numpy()])
@@ -74,10 +88,21 @@ def validate(dataloader, model, criterion, optimizer, epoch, fold, writer):
         npy_paths = sample["npy_path"]
 
         with torch.no_grad():
+            if config.mix_strategy is not None:
+                if config.mix_strategy is "MixUp":
+                    mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=1.0)
+                elif config.mix_strategy is "FMix":
+                    mixed_inputs, labels, labels_shuffled, lam = augmentations.fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=config.device)
+                else:
+                    raise NotImplementedError
+                mixed_outputs = model(mixed_inputs)
+                loss = lam * criterion(mixed_outputs, labels.unsqueeze(1)) + (1 - lam) * criterion(mixed_outputs, labels_shuffled.unsqueeze(1))
+
             outputs = model(inputs)
             probs = torch.sigmoid(outputs)
 
-        loss = criterion(outputs, labels.unsqueeze(1))
+        if config.mix_strategy is None:
+            loss = criterion(outputs, labels.unsqueeze(1))
         loss_avg += loss.item()
 
         all_labels = np.concatenate([all_labels, labels.cpu().detach().numpy()])
