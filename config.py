@@ -26,6 +26,7 @@ n_loader_workers = 4
 # pos_weights_train = [9.687047294418406]
 pos_weights_train = [1.0]
 mix_strategy = "MixUp"  # {None, "FMix", "MixUp"}
+mixup_alpha = 1.0
 
 # lr
 lr_scheduler_name = "CosineAnnealingLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR"]
@@ -47,9 +48,9 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(lr),
     str(batch_size),
     str(pos_weights_train),
-    "BCE",
+    "Focal",
     lr_scheduler_name,
-    mix_strategy,
+    mix_strategy + str(mixup_alpha),
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

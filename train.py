@@ -8,6 +8,7 @@ import sklearn.metrics
 from sklearn.model_selection import StratifiedKFold
 
 import augmentations
+from binary_focal_loss import BinaryFocalWithLogitsLoss
 import config
 import dataset
 import seti_model
@@ -28,7 +29,7 @@ def train(dataloader, model, criterion, optimizer, epoch, fold, writer):
         optimizer.zero_grad()
         if config.mix_strategy is not None:
             if config.mix_strategy is "MixUp":
-                mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=1.0)
+                mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=config.mixup_alpha)
             elif config.mix_strategy is "FMix":
                 mixed_inputs, labels, labels_shuffled, lam = augmentations.fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=config.device)
             else:
@@ -90,7 +91,7 @@ def validate(dataloader, model, criterion, optimizer, epoch, fold, writer):
         with torch.no_grad():
             if config.mix_strategy is not None:
                 if config.mix_strategy is "MixUp":
-                    mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=1.0)
+                    mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=config.mixup_alpha)
                 elif config.mix_strategy is "FMix":
                     mixed_inputs, labels, labels_shuffled, lam = augmentations.fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=config.device)
                 else:
@@ -269,8 +270,9 @@ if __name__ == "__main__":
         print(config.model_name, "loaded successfully")
 
         # Criterion
-        perclass_weights_train = torch.tensor(config.pos_weights_train).to(dtype=config.dtype, device=config.device)
-        criterion = torch.nn.BCEWithLogitsLoss(pos_weight=perclass_weights_train).to(config.device)
+        # perclass_weights_train = torch.tensor(config.pos_weights_train).to(dtype=config.dtype, device=config.device)
+        # criterion = torch.nn.BCEWithLogitsLoss(pos_weight=perclass_weights_train).to(config.device)
+        criterion = BinaryFocalWithLogitsLoss(reduction="mean").to(config.device)
 
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
