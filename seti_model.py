@@ -62,7 +62,7 @@ def overfit(model):
     label = torch.tensor([1.0])
     model.train()
 
-    labels_df = pd.read_csv(config.labels_csv_path)
+    labels_df = pd.read_csv(config.train_csv_path)
     all_npy_paths = labels_df["path"].values
     all_labels = labels_df["target"].values
     for i in range(len(all_npy_paths)):
@@ -123,8 +123,8 @@ if __name__ == "__main__":
     input_tensor = torch.randn((1, 6, 273, 256))
     # model = DenseNet(in_channels=6, num_classes=1, pretrained=False)
     # model = SETIModel(model_name=config.model_name, in_channels=6, num_classes=1, pretrained=True)
-    model = SETIModel(model_name="dm_nfnet_f0", in_channels=6, num_classes=1, pretrained=True)
-    # model = SETIModel(model_name="tf_efficientnet_b1_ns", in_channels=6, num_classes=1, pretrained=True)
+    # model = SETIModel(model_name="dm_nfnet_f0", in_channels=6, num_classes=1, pretrained=True)
+    model = SETIModel(model_name="tf_efficientnet_b7", in_channels=6, num_classes=1, pretrained=True)
     print(model)
     print("Model", model.model_name)
     output = model(input_tensor)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     print("parameters_amount:", model_parameter_amount)
     print("size in Gb", model_parameter_amount * 32 / 8 / 1024 / 1024 / 1024)
 
-    # overfit(model)
+    overfit(model)
 
     # from pprint import pprint
     # model_names = timm.list_models(pretrained=True)

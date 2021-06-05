@@ -13,7 +13,7 @@ if __name__ == "__main__":
     ndarray_mean = np.zeros((6, 273, 256))
     ndarray_std = np.zeros((6, 273, 256))
 
-    labels_df = pd.read_csv(config.labels_csv_path)
+    labels_df = pd.read_csv(config.train_csv_path)
     # print(np.unique(labels_df["target"], return_counts=True))
     labels_df["group"] = labels_df["id"].apply(lambda x: x[0])
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # print(df)
     print(labels_df.pivot_table(index=['group'], columns='target', aggfunc='size', fill_value=0))
 
-    # labels_df[["id", "target"]].hist(by=labels_df["group"])
+    labels_df[["id", "target"]].hist(by=labels_df["group"])
     import matplotlib.pyplot as plt
     plt.show()
     exit()
@@ -31,7 +31,8 @@ if __name__ == "__main__":
     print("Calculating mean ndarray")
     for index, row in labels_df.iterrows():
         npy_path = row["path"]
-        ndarray = np.load(npy_path).astype(np.float32)
+        ndarray = np.load(npy_path)
+        ndarray = ndarray.astype(np.float32)
         ndarray_mean += ndarray
 
         print('\r', "Progress {}".format(index), end='')
