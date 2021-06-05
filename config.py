@@ -10,7 +10,7 @@ model_name = "tf_efficientnetv2_s_in21k"  # 32
 model_pretrained = True
 
 # Dataset settings
-in_channels = 1  # {1, 6}
+in_channels = 2  # {1, 2, 6}
 desired_image_size = 256  # 273 for 6 channels, anything for 1 channel
 augment = True
 normalize = True

@@ -1,3 +1,4 @@
+import cv2
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,6 +18,13 @@ def visualize_sample(sample, title=None, save_path=None):
 
     if title is None:
         title = str(sample["label"])
+
+    if channel_amount == 2:
+        ndarray = np.vstack(ndarray)
+        resized_shape = (512, 512)
+        ndarray = cv2.resize(ndarray, resized_shape, interpolation=cv2.INTER_AREA)
+        ndarray = ndarray[np.newaxis, :, :]
+        channel_amount = 1
 
     if channel_amount == 6:
         fig = plt.figure(figsize=(16, 10))

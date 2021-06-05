@@ -85,10 +85,15 @@ class SETIDataset(torch.utils.data.Dataset):
             # print("Normalizing")
 
             # wtf norm
+            # # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
             # signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
+            # # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # # signal = ((np.clip(signal, -1, 3) + 1) / 4 * 255).astype(np.uint8)
+            # signal = (np.clip(signal, -1, 3) + 1) / 4
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # signal = (signal - signal.min()) / (signal.max() - signal.min())
+            # exit()
 
             # meanstd norm - seems like better than wo normalization
             signal = (signal - self.signal_mean) / self.signal_std
@@ -100,19 +105,34 @@ class SETIDataset(torch.utils.data.Dataset):
             # signal = (signal - signal_mins_channelwise) / (signal_maxs_channelwise - signal_mins_channelwise)
 
         if self.in_channels == 6:
-            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # print()
             signal = np.pad(signal, ((0, 0), (0, 0), (0, self.desired_image_size - width)), 'constant')  # [6 x 273 x 273]
-            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
         elif self.in_channels == 1:
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # signal = np.vstack(signal).transpose((1, 0))
             signal = np.vstack(signal)
-            # print(signal.shape)
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            resized_shape = (self.desired_image_size, self.desired_image_size)
+            signal = cv2.resize(signal, resized_shape, interpolation=cv2.INTER_AREA)
+
+            signal = signal[np.newaxis, :, :]
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            # exit()
+        elif self.in_channels == 2:
+            signal_A = np.vstack(signal[[0, 2, 4]])
+            signal_BCD = np.vstack(signal[[1, 3, 5]])
+            # print("signal_A", signal_A.shape, signal_A.min(), signal_A.mean(), signal_A.max())
+            # print("signal_BCD", signal_BCD.shape, signal_BCD.min(), signal_BCD.mean(), signal_BCD.max())
+            signal = np.stack((signal_A, signal_BCD))
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            signal = chw2hwc(signal)
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             resized_shape = (self.desired_image_size, self.desired_image_size)
             signal = cv2.resize(signal, resized_shape, interpolation=cv2.INTER_AREA)
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
-
-            signal = signal[np.newaxis, :, :]
+            signal = hwc2chw(signal)
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # exit()
         else:
@@ -126,6 +146,14 @@ class SETIDataset(torch.utils.data.Dataset):
         return sample
 
 
+def hwc2chw(ndarray):
+    return np.transpose(ndarray, (2, 0, 1))
+
+
+def chw2hwc(ndarray):
+    return np.transpose(ndarray, (1, 2, 0))
+
+
 if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
@@ -135,7 +163,7 @@ if __name__ == "__main__":
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
 
-    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, augment=True, normalize=False)
+    dataset = SETIDataset(labels, npy_paths, in_channels=2, desired_image_size=512, augment=True, normalize=True)
     showed_amount = 0
     for sample in dataset:
         # rand_index = random.randint(0, len(dataset) - 1)
