@@ -1,7 +1,7 @@
 import numpy as np
 import os
-
 import pandas as pd
+import random
 import torch
 from torch.utils.tensorboard import SummaryWriter
 import sklearn.metrics
@@ -190,10 +190,23 @@ def save_checkpoint(save_checkpoint_path, epoch, model, loss_avg_train, loss_avg
     torch.save(checkpoint, save_checkpoint_path)
 
 
+def set_seed(seed=8, deterministic=False):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = deterministic
+
+
 if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
     print("Run description:", config.run_description)
+
+    # Seeds
+    if config.deterministic is True:
+        set_seed(config.seed, config.deterministic)
 
     # Init worker
     writer = SummaryWriter(config.writer_dir)
@@ -206,7 +219,7 @@ if __name__ == "__main__":
     # CV
     avg_val_auc = 0
     avg_val_loss = 0
-    skf = StratifiedKFold(n_splits=config.cv_splits_amount)
+    skf = StratifiedKFold(n_splits=config.cv_splits_amount, random_state=config.seed if config.deterministic is True else None)
     for fold, (train_indices, val_indices) in enumerate(skf.split(all_npy_paths, all_labels)):
         print("Starting fold #" + str(fold + 1))
 
@@ -270,9 +283,13 @@ if __name__ == "__main__":
         print(config.model_name, "loaded successfully")
 
         # Criterion
-        # perclass_weights_train = torch.tensor(config.pos_weights_train).to(dtype=config.dtype, device=config.device)
-        # criterion = torch.nn.BCEWithLogitsLoss(pos_weight=perclass_weights_train).to(config.device)
-        criterion = BinaryFocalWithLogitsLoss(reduction="mean").to(config.device)
+        if config.criterion_name == "BCE":
+            perclass_weights_train = torch.tensor(config.pos_weights_train).to(dtype=config.dtype, device=config.device)
+            criterion = torch.nn.BCEWithLogitsLoss(pos_weight=perclass_weights_train).to(config.device)
+        elif config.criterion_name == "Focal":
+            criterion = BinaryFocalWithLogitsLoss(reduction="mean").to(config.device)
+        else:
+            raise NotImplementedError
 
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)

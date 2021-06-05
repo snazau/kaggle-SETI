@@ -4,7 +4,7 @@ import torch
 
 curr_date = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
 # model_name = "dm_nfnet_f0"  # 32 128
-model_name = "tf_efficientnetv2_s_in21k"
+model_name = "tf_efficientnetv2_s_in21k"  # 32
 # model_name = "efficientnet_b4"  # 16
 # model_name = "efficientnet_b0"  # 64 256
 model_pretrained = True
@@ -17,6 +17,8 @@ normalize = True
 
 # Training process
 debug = False
+deterministic = True
+seed = 8
 print_freq = 300
 cv_splits_amount = 5
 epochs_amount = 10
@@ -27,6 +29,7 @@ n_loader_workers = 4
 pos_weights_train = [1.0]
 mix_strategy = "MixUp"  # {None, "FMix", "MixUp"}
 mixup_alpha = 1.0
+criterion_name = "BCE"  # {"BCE", "Focal"}
 
 # lr
 lr_scheduler_name = "CosineAnnealingLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR"]
@@ -48,7 +51,7 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(lr),
     str(batch_size),
     str(pos_weights_train),
-    "Focal",
+    criterion_name,
     lr_scheduler_name,
     mix_strategy + str(mixup_alpha),
 )
