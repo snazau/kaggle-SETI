@@ -63,7 +63,7 @@ dtype = torch.float32
 data_dir = os.path.join(".", "data")
 train_data_dir = os.path.join(data_dir, "train")
 test_data_dir = os.path.join(data_dir, "test")
-labels_csv_path = os.path.join(data_dir, "train.csv")
+train_csv_path = os.path.join(data_dir, "train.csv")
 test_csv_path = os.path.join(data_dir, "test.csv")
 
 checkpoints_dir = os.path.join(".", "checkpoints", run_description)

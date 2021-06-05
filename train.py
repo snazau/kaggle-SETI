@@ -212,7 +212,7 @@ if __name__ == "__main__":
     writer = SummaryWriter(config.writer_dir)
 
     # Get all paths and labels
-    labels_df = pd.read_csv(config.labels_csv_path)
+    labels_df = pd.read_csv(config.train_csv_path)
     all_npy_paths = labels_df["path"].values
     all_labels = labels_df["target"].values
 

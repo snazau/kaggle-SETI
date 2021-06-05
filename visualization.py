@@ -193,7 +193,7 @@ if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
 
-    labels_csv_path = config.labels_csv_path
+    labels_csv_path = config.train_csv_path
     # visualization_dir = os.path.join(".", "visualization", "train_data")
     # visualize_train_data(labels_csv_path, visualization_dir)
 

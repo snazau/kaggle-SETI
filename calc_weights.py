@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     calc_type = "max"  # {"mean", "max"}
 
-    labels_df = pd.read_csv(config.labels_csv_path)
+    labels_df = pd.read_csv(config.train_csv_path)
 
     images_per_class = {
         1: 0,

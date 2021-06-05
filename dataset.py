@@ -158,7 +158,7 @@ if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
 
-    labels_df = pd.read_csv(config.labels_csv_path)
+    labels_df = pd.read_csv(config.train_csv_path)
     labels_df["target"] = labels_df["target"].apply(lambda x: int(x))
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
