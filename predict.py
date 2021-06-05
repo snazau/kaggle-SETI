@@ -95,9 +95,11 @@ def get_ensemble_preds(checkpoint_paths, test_csv_path):
 
     models_amount = 0
     ensemble_probs = np.zeros_like(labels_test)
+    ensemble_labels, ensemble_npy_paths = None, None
     for checkpoint_path in checkpoint_paths:
         models_amount += 1
         probs, labels, npy_paths = get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test)
+        ensemble_labels, ensemble_npy_paths = labels, npy_paths
         ensemble_probs += probs
     ensemble_probs /= float(models_amount)
 
@@ -107,7 +109,7 @@ def get_ensemble_preds(checkpoint_paths, test_csv_path):
     }
     df_submission = pd.DataFrame(data_submission, columns=['id', 'target'])
 
-    return ensemble_probs, df_submission
+    return ensemble_probs, ensemble_labels, ensemble_npy_paths, df_submission
 
 
 def get_best_k_checkpoint_paths(cv_checkpoints_dir, best_metric="best_loss_val"):
@@ -171,12 +173,18 @@ if __name__ == "__main__":
     # run_name = "May21_20-12-15_model=tf_efficientnetv2_s_in21k_pretrained=True_aug=True_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
     # run_name = "May30_00-15-15_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
     # run_name = "May30_16-58-16_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_addCoarseDropout"
-    run_name = "May30_23-34-30_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_CoarseDropout_RndPermut"
+    # run_name = "May30_23-34-30_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_CoarseDropout_RndPermut"
+    # run_name = "May31_15-58-20_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_ClsfDropout"
+    # run_name = "May31_23-03-41_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp"
+    # run_name = "Jun01_22-35-32_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp0.4"
+    # run_name = "Jun02_12-32-52_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp5.0"
+    # run_name = "Jun02_23-17-22_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=Focal_scheduler=CosineAnnealingLR_MixUp1.0"
+    run_name = "Jun03_16-13-45_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[9.687047294418406]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
 
     best_metric = "best_loss_val"
     cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)
     cv_checkpoint_paths = get_best_k_checkpoint_paths(cv_checkpoints_dir, best_metric=best_metric)
-    ensemble_probs, df_submission = get_ensemble_preds(cv_checkpoint_paths, config.test_csv_path)
+    ensemble_probs, ensemble_labels, ensemble_npy_paths, df_submission = get_ensemble_preds(cv_checkpoint_paths, config.test_csv_path)
 
     # Save submission
     if not os.path.exists(config.submissions_dir):
