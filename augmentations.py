@@ -85,6 +85,15 @@ def coarse_dropout(spec, max_holes=8, max_height=8, max_width=8, min_holes=8, mi
     return cloned
 
 
+def motion_blur(spec, p=0.5):
+    cloned = copy.deepcopy(spec)
+    transform = A.MotionBlur(p=p)
+    channels = spec.shape[0]
+    for channel_num in range(channels):
+        cloned[channel_num] = transform(image=cloned[channel_num])["image"]
+    return cloned
+
+
 def fmix(data, targets, alpha, decay_power, shape, device, max_soft=0.0):
     lam, mask = FMix.sample_mask(alpha, decay_power, shape, max_soft)
 
@@ -159,36 +168,41 @@ if __name__ == "__main__":
     # sample["tensor"] = torch.from_numpy(signal_coarsed)
     # visualization.visualize_sample(sample)
 
-    # FMix check - prbbly not good for that task
-    # mixup check
-    device = torch.device("cpu")
-    bs = 8
-    dataloader = torch.utils.data.DataLoader(ds, batch_size=bs, shuffle=True, num_workers=2, pin_memory=True)
-    for index, sample in enumerate(dataloader):
-        inputs = sample["tensor"].to(device, config.dtype)
-        labels = sample["label"].to(device, config.dtype)
-        npy_paths = sample["npy_path"]
+    # MotionBlur check
+    # signal_blurred = motion_blur(signal.numpy(), p=1)
+    # sample["tensor"] = torch.from_numpy(signal_blurred)
+    # visualization.visualize_sample(sample)
 
-        # mixed_inputs, labels, labels_shuffled, lam = fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=device)
-        mixed_inputs, labels, labels_shuffled, lam = mixup(inputs, labels, alpha=1.0)
-        print("mixed_inputs", mixed_inputs.shape)
-        print("labels", labels.shape)
-        print("labels_shuffled", labels_shuffled.shape)
-        print("lam", lam)
-
-        for i in range(bs):
-            kek = {
-                "tensor": inputs[i],
-                "label": labels[i].item()
-            }
-            visualization.visualize_sample(kek)
-
-            kek = {
-                "tensor": mixed_inputs[i],
-                "label": "orig=" + str(labels[i].item()) + "_shuffled=" + str(labels_shuffled[i].item()) + "_lam=" + str(lam)
-            }
-            visualization.visualize_sample(kek)
-        exit()
+    # # FMix check - prbbly not good for that task
+    # # mixup check
+    # device = torch.device("cpu")
+    # bs = 8
+    # dataloader = torch.utils.data.DataLoader(ds, batch_size=bs, shuffle=True, num_workers=2, pin_memory=True)
+    # for index, sample in enumerate(dataloader):
+    #     inputs = sample["tensor"].to(device, config.dtype)
+    #     labels = sample["label"].to(device, config.dtype)
+    #     npy_paths = sample["npy_path"]
+    #
+    #     # mixed_inputs, labels, labels_shuffled, lam = fmix(inputs, labels, alpha=1.0, decay_power=5.0, shape=(256, 256), device=device)
+    #     mixed_inputs, labels, labels_shuffled, lam = mixup(inputs, labels, alpha=1.0)
+    #     print("mixed_inputs", mixed_inputs.shape)
+    #     print("labels", labels.shape)
+    #     print("labels_shuffled", labels_shuffled.shape)
+    #     print("lam", lam)
+    #
+    #     for i in range(bs):
+    #         kek = {
+    #             "tensor": inputs[i],
+    #             "label": labels[i].item()
+    #         }
+    #         visualization.visualize_sample(kek)
+    #
+    #         kek = {
+    #             "tensor": mixed_inputs[i],
+    #             "label": "orig=" + str(labels[i].item()) + "_shuffled=" + str(labels_shuffled[i].item()) + "_lam=" + str(lam)
+    #         }
+    #         visualization.visualize_sample(kek)
+    #     exit()
 
     # showed_amount = 0
     # for sample in ds:

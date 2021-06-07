@@ -46,6 +46,10 @@ class SETIDataset(torch.utils.data.Dataset):
                 signal = augmentations.freq_mask(signal, num_masks_per_channel=num_masks_per_channel_freq, replace_with_zero=True)
             signal = signal.numpy()
 
+            # MotionBlur
+            if random.uniform(0, 1) < 0.5:
+                signal = augmentations.motion_blur(signal, p=0.75)
+
             # CoarseDropout for spectrogram
             if random.uniform(0, 1) < 0.5:
                 signal = augmentations.coarse_dropout(
@@ -163,7 +167,7 @@ if __name__ == "__main__":
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
 
-    dataset = SETIDataset(labels, npy_paths, in_channels=2, desired_image_size=512, augment=True, normalize=True)
+    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, augment=False, normalize=True)
     showed_amount = 0
     for sample in dataset:
         # rand_index = random.randint(0, len(dataset) - 1)

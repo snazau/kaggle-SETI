@@ -53,7 +53,7 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
-    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros",
+    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros_MotionBLur",
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
