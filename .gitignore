@@ -1,4 +1,5 @@
 # Custom
+architectures/*
 checkpoints/*
 data/*
 FMix/*
