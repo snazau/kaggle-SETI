@@ -47,7 +47,7 @@ class SETIDataset(torch.utils.data.Dataset):
             signal = signal.numpy()
 
             # MotionBlur
-            if random.uniform(0, 1) < 0.5:
+            if random.uniform(0, 1) < 0:
                 signal = augmentations.motion_blur(signal, p=0.75)
 
             # CoarseDropout for spectrogram

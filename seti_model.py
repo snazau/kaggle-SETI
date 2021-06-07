@@ -1,8 +1,18 @@
+from dropblock import DropBlock2D
+import timm
 import torch
 import torchvision
-import timm
 
-import config
+
+def extend_module(model, old_module, extension_module):
+    for child_name, child in model.named_children():
+        if isinstance(child, type(old_module)):
+            # print("FOUND", child_name)
+            extended_module = torch.nn.Sequential(child, extension_module)
+            setattr(model, child_name, extended_module)
+        else:
+            # print(child_name)
+            extend_module(child, old_module, extension_module)
 
 
 class DenseNet(torch.nn.Module):
@@ -23,27 +33,36 @@ class DenseNet(torch.nn.Module):
 
 
 class SETIModel(torch.nn.Module):
-    def __init__(self, model_name, in_channels=3, num_classes=1, pretrained=False):
+    def __init__(self, model_name, in_channels=3, num_classes=1, pretrained=False, include_drop_block=False):
         super().__init__()
         self.model_name = model_name
         self.model = timm.create_model(self.model_name, pretrained=pretrained, in_chans=in_channels)
         self.dropout = torch.nn.Dropout(0.5)
+
+        self.include_drop_block = include_drop_block
+        self.drop_block = DropBlock2D(block_size=5, drop_prob=0.15)
 
         # dm_nfnet_f#
         if "nfnet" in self.model_name:
             self.n_features = self.model.head.fc.in_features
             self.model.head.fc = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
+            if self.include_drop_block is True:
+                raise NotImplementedError
         elif "efficientnet" in self.model_name:
             self.n_features = self.model.classifier.in_features
             self.model.classifier = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
+            if self.include_drop_block is True:
+                extend_module(self.model.blocks, torch.nn.Sequential(), self.drop_block)
         elif "resnet" in self.model_name:
             self.n_features = self.model.fc.in_features
             self.model.fc = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
-
-        # print(self.model)
+            if self.include_drop_block is True:
+                extend_module(self.model, torch.nn.Sequential(), self.drop_block)
+        else:
+            raise NotImplementedError
 
     def forward(self, x):
         feature_vector = self.model(x)
@@ -124,7 +143,7 @@ if __name__ == "__main__":
     # model = DenseNet(in_channels=6, num_classes=1, pretrained=False)
     # model = SETIModel(model_name=config.model_name, in_channels=6, num_classes=1, pretrained=True)
     # model = SETIModel(model_name="dm_nfnet_f0", in_channels=6, num_classes=1, pretrained=True)
-    model = SETIModel(model_name="tf_efficientnet_b7", in_channels=6, num_classes=1, pretrained=True)
+    model = SETIModel(model_name="tf_efficientnetv2_s_in21k", in_channels=6, num_classes=1, pretrained=True, include_drop_block=True)
     print(model)
     print("Model", model.model_name)
     output = model(input_tensor)
@@ -133,7 +152,7 @@ if __name__ == "__main__":
     print("parameters_amount:", model_parameter_amount)
     print("size in Gb", model_parameter_amount * 32 / 8 / 1024 / 1024 / 1024)
 
-    overfit(model)
+    # overfit(model)
 
     # from pprint import pprint
     # model_names = timm.list_models(pretrained=True)

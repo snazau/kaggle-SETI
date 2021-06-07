@@ -8,6 +8,7 @@ model_name = "tf_efficientnetv2_s_in21k"  # 32
 # model_name = "efficientnet_b4"  # 16
 # model_name = "efficientnet_b0"  # 64 256
 model_pretrained = True
+include_drop_block = True
 
 # Dataset settings
 in_channels = 1  # {1, 2, 6}
@@ -20,11 +21,13 @@ debug = False
 deterministic = True
 seed = 8
 print_freq = 300
+
 cv_splits_amount = 5
 epochs_amount = 10
 batch_size = 32
 test_batch_size = 128
 n_loader_workers = 4
+
 # pos_weights_train = [9.687047294418406]
 pos_weights_train = [1.0]
 mix_strategy = "MixUp"  # {None, "FMix", "MixUp"}
@@ -40,10 +43,11 @@ lr_reduce_on_plateau_patience = 3
 lr_cosine_annealing_min_lr = 5e-6
 lr_cosine_annealing_T_max = epochs_amount
 
-run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_{}".format(
+run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_{}".format(
     curr_date,
     model_name,
     str(model_pretrained)[0],
+    str(include_drop_block)[0],
     str(in_channels),
     str(desired_image_size),
     str(augment)[0],
@@ -53,7 +57,7 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
-    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros_MotionBLur",
+    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros",
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

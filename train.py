@@ -277,7 +277,8 @@ if __name__ == "__main__":
             model_name=config.model_name,
             in_channels=config.in_channels,
             num_classes=1,
-            pretrained=config.model_pretrained
+            pretrained=config.model_pretrained,
+            include_drop_block=True,
         )
         model = model.to(device=config.device)
         print(config.model_name, "loaded successfully")
