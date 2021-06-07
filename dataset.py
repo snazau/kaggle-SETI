@@ -39,11 +39,11 @@ class SETIDataset(torch.utils.data.Dataset):
                 # print("augmenting")
                 num_masks_per_channel_time = [random.choice([0, 1, 2, 3]) for _ in range(channel_amount)]
                 # print(num_masks_per_channel_time)
-                signal = augmentations.time_mask(signal, num_masks_per_channel=num_masks_per_channel_time)
+                signal = augmentations.time_mask(signal, num_masks_per_channel=num_masks_per_channel_time, replace_with_zero=True)
 
                 num_masks_per_channel_freq = [random.choice([0, 1, 2, 3]) for _ in range(channel_amount)]
                 # print(num_masks_per_channel_freq)
-                signal = augmentations.freq_mask(signal, num_masks_per_channel=num_masks_per_channel_freq)
+                signal = augmentations.freq_mask(signal, num_masks_per_channel=num_masks_per_channel_freq, replace_with_zero=True)
             signal = signal.numpy()
 
             # CoarseDropout for spectrogram

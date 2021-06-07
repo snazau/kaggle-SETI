@@ -10,7 +10,7 @@ model_name = "tf_efficientnetv2_s_in21k"  # 32
 model_pretrained = True
 
 # Dataset settings
-in_channels = 2  # {1, 2, 6}
+in_channels = 1  # {1, 2, 6}
 desired_image_size = 256  # 273 for 6 channels, anything for 1 channel
 augment = True
 normalize = True
@@ -53,7 +53,7 @@ run_description = "{}_model={}_pretrained={}_c={}_size={}_aug={}_nrmlz={}_lr={}_
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
-    mix_strategy + str(mixup_alpha),
+    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros",
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
