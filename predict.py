@@ -94,7 +94,7 @@ def get_ensemble_preds(checkpoint_paths, test_csv_path):
     npy_ids_test = test_df["id"].values
 
     models_amount = 0
-    ensemble_probs = np.zeros_like(labels_test)
+    ensemble_probs = np.zeros_like(labels_test, dtype=np.float64)
     ensemble_labels, ensemble_npy_paths = None, None
     for checkpoint_path in checkpoint_paths:
         models_amount += 1
@@ -179,7 +179,10 @@ if __name__ == "__main__":
     # run_name = "Jun01_22-35-32_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp0.4"
     # run_name = "Jun02_12-32-52_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp5.0"
     # run_name = "Jun02_23-17-22_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=Focal_scheduler=CosineAnnealingLR_MixUp1.0"
-    run_name = "Jun03_16-13-45_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[9.687047294418406]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
+    # run_name = "Jun03_16-13-45_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[9.687047294418406]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
+    # run_name = "Jun05_18-53-18_model=tf_efficientnetv2_s_in21k_pretrained=T_c=2_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
+    # run_name = "Jun06_15-26-26_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
+    run_name = "Jun06_23-43-54_model=tf_efficientnetv2_s_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
 
     best_metric = "best_loss_val"
     cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)

@@ -85,7 +85,7 @@ def visualize_train_data(labels_csv_path, visualization_dir):
     print()
 
 
-def visualize_top_preds(checkpoint_path, labels_csv_path, visualization_dir, visualize_best=False):
+def visualize_top_preds(checkpoints_paths, labels_csv_path, visualization_dir, visualize_best=False):
     if not os.path.exists(visualization_dir):
         os.makedirs(visualization_dir)
 
@@ -94,7 +94,8 @@ def visualize_top_preds(checkpoint_path, labels_csv_path, visualization_dir, vis
     labels = df["target"].values
     npy_ids = df["id"].values
 
-    pred_probs, pred_labels, pred_npy_paths = predict.get_preds_from_checkpoint(checkpoint_path, labels, npy_paths)
+    # pred_probs, pred_labels, pred_npy_paths = predict.get_preds_from_checkpoint(checkpoint_path, labels, npy_paths)
+    pred_probs, pred_labels, pred_npy_paths, df_submission = predict.get_ensemble_preds(checkpoints_paths, labels_csv_path)
     print("pred_probs", pred_probs)
     print("pred_labels", pred_labels)
     # exit(0)
@@ -197,8 +198,16 @@ if __name__ == "__main__":
     # visualization_dir = os.path.join(".", "visualization", "train_data")
     # visualize_train_data(labels_csv_path, visualization_dir)
 
-    run_name = "May21_20-12-15_model=tf_efficientnetv2_s_in21k_pretrained=True_aug=True_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    checkpoints_dir = "/media/tower/nvme/kaggle/SETI_bin_Class/checkpoints/" + run_name + "/fold5"
-    checkpoint_path = os.path.join(checkpoints_dir, "best_loss_val_e12_" + run_name + ".pth.tar")
+    # run_name = "May21_20-12-15_model=tf_efficientnetv2_s_in21k_pretrained=True_aug=True_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
+    run_name = "May31_23-03-41_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp"
+
+    # checkpoints_dir = "/media/tower/nvme/kaggle/SETI_bin_Class/checkpoints/" + run_name + "/fold5"
+    # checkpoint_path = os.path.join(checkpoints_dir, "best_loss_val_e12_" + run_name + ".pth.tar")
+    # checkpoints_paths = [checkpoint_path]
+
+    best_metric = "best_loss_val"
+    cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)
+    checkpoints_paths = predict.get_best_k_checkpoint_paths(cv_checkpoints_dir, best_metric=best_metric)
+
     visualization_dir = os.path.join(".", "visualization", run_name)
-    visualize_top_preds(checkpoint_path, labels_csv_path, visualization_dir, visualize_best=True)
+    visualize_top_preds(checkpoints_paths, labels_csv_path, visualization_dir, visualize_best=True)
