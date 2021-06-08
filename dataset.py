@@ -116,7 +116,8 @@ class SETIDataset(torch.utils.data.Dataset):
         elif self.in_channels == 1:
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # signal = np.vstack(signal).transpose((1, 0))
-            signal = np.vstack(signal)
+            # signal = np.vstack(signal)
+            signal = np.vstack(signal[[0, 2, 4]])
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             resized_shape = (self.desired_image_size, self.desired_image_size)
             signal = cv2.resize(signal, resized_shape, interpolation=cv2.INTER_AREA)

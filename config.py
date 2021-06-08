@@ -4,11 +4,12 @@ import torch
 
 curr_date = datetime.datetime.now().strftime("%b%d_%H-%M-%S")
 # model_name = "dm_nfnet_f0"  # 32 128
-model_name = "tf_efficientnetv2_s_in21k"  # 32
+model_name = "tf_efficientnetv2_s_in21k"  # 32 128
 # model_name = "efficientnet_b4"  # 16
 # model_name = "efficientnet_b0"  # 64 256
+# model_name = "resnet18d"  # 256 512
 model_pretrained = True
-include_drop_block = True
+include_drop_block = False
 
 # Dataset settings
 in_channels = 1  # {1, 2, 6}
@@ -57,7 +58,7 @@ run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz=
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
-    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros",
+    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros_3Aonly",
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
