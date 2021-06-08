@@ -36,7 +36,7 @@ class SETIModel(torch.nn.Module):
     def __init__(self, model_name, in_channels=3, num_classes=1, pretrained=False, include_drop_block=False):
         super().__init__()
         self.model_name = model_name
-        self.model = timm.create_model(self.model_name, pretrained=pretrained, in_chans=in_channels)
+        self.backbone = timm.create_model(self.model_name, pretrained=pretrained, in_chans=in_channels)
         self.dropout = torch.nn.Dropout(0.5)
 
         self.include_drop_block = include_drop_block
@@ -44,28 +44,28 @@ class SETIModel(torch.nn.Module):
 
         # dm_nfnet_f#
         if "nfnet" in self.model_name:
-            self.n_features = self.model.head.fc.in_features
-            self.model.head.fc = torch.nn.Identity()
+            self.n_features = self.backbone.head.fc.in_features
+            self.backbone.head.fc = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
             if self.include_drop_block is True:
                 raise NotImplementedError
         elif "efficientnet" in self.model_name:
-            self.n_features = self.model.classifier.in_features
-            self.model.classifier = torch.nn.Identity()
+            self.n_features = self.backbone.classifier.in_features
+            self.backbone.classifier = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
             if self.include_drop_block is True:
-                extend_module(self.model.blocks, torch.nn.Sequential(), self.drop_block)
+                extend_module(self.backbone.blocks, torch.nn.Sequential(), self.drop_block)
         elif "resnet" in self.model_name:
-            self.n_features = self.model.fc.in_features
-            self.model.fc = torch.nn.Identity()
+            self.n_features = self.backbone.fc.in_features
+            self.backbone.fc = torch.nn.Identity()
             self.head = torch.nn.Linear(self.n_features, num_classes)
             if self.include_drop_block is True:
-                extend_module(self.model, torch.nn.Sequential(), self.drop_block)
+                extend_module(self.backbone, torch.nn.Sequential(), self.drop_block)
         else:
             raise NotImplementedError
 
     def forward(self, x):
-        feature_vector = self.model(x)
+        feature_vector = self.backbone(x)
         output = self.head(self.dropout(feature_vector))
         return output
 
