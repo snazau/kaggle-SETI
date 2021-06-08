@@ -180,6 +180,7 @@ def save_checkpoint(save_checkpoint_path, epoch, model, loss_avg_train, loss_avg
         "auc_val": auc_val,
         "auc_train": auc_train,
         "model": {
+            "include_drop_block": config.include_drop_block,
             "normalize": config.normalize,
             "in_channels": config.in_channels,
             "desired_image_size": config.desired_image_size,
@@ -278,7 +279,7 @@ if __name__ == "__main__":
             in_channels=config.in_channels,
             num_classes=1,
             pretrained=config.model_pretrained,
-            include_drop_block=True,
+            include_drop_block=config.include_drop_block,
         )
         model = model.to(device=config.device)
         print(config.model_name, "loaded successfully")
