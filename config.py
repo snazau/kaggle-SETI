@@ -36,13 +36,19 @@ mixup_alpha = 1.0
 criterion_name = "BCE"  # {"BCE", "Focal"}
 
 # lr
-lr_scheduler_name = "CosineAnnealingLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR"]
+lr_scheduler_name = "OneCycleLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR", "OneCycleLR"]
 weight_decay = 1e-6
 lr = 5e-4
 lr_reduce_on_plateau_factor = 0.5
 lr_reduce_on_plateau_patience = 3
 lr_cosine_annealing_min_lr = 5e-6
 lr_cosine_annealing_T_max = epochs_amount
+lr_cycle_max_lr = 1e-3
+lr_cycle_pct_start = 0.1
+lr_cycle_anneal_strategy = "cos"
+lr_cycle_div_factor = lr_cycle_max_lr / lr
+lr_cycle_final_div_factor = 1e3
+lr_cycle_epochs = epochs_amount
 
 run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_{}".format(
     curr_date,

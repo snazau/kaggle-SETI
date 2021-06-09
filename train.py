@@ -14,7 +14,7 @@ import dataset
 import seti_model
 
 
-def train(dataloader, model, criterion, optimizer, epoch, fold, writer):
+def train(dataloader, model, criterion, optimizer, scheduler, epoch, fold, writer):
     model.train()
 
     loss_avg = 0
@@ -41,6 +41,8 @@ def train(dataloader, model, criterion, optimizer, epoch, fold, writer):
             loss = criterion(outputs, labels.unsqueeze(1))
         loss.backward()
         optimizer.step()
+        if config.lr_scheduler_name == "OneCycleLR":
+            scheduler.step()
 
         loss_avg += loss.item()
 
@@ -312,6 +314,17 @@ if __name__ == "__main__":
                     eta_min=config.lr_cosine_annealing_min_lr,
                     last_epoch=-1
                 )
+            elif config.lr_scheduler_name == "OneCycleLR":
+                scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer,
+                    epochs=config.lr_cycle_epochs,
+                    steps_per_epoch=len(dataloader_train),
+                    max_lr=config.lr_cycle_max_lr,
+                    pct_start=config.lr_cycle_pct_start,
+                    anneal_strategy=config.lr_cycle_anneal_strategy,
+                    div_factor=config.lr_cycle_div_factor,
+                    final_div_factor=config.lr_cycle_final_div_factor,
+                )
             else:
                 error_message = "Only reduce step-wise or reduce on plateau is supported but {} was found".format(
                     config.lr_scheduler_name)
@@ -331,7 +344,7 @@ if __name__ == "__main__":
         max_val_auc_epoch = -1
         for epoch in range(config.epochs_amount):
             print("Training started")
-            loss_avg_train, metrics_train = train(dataloader_train, model, criterion, optimizer, epoch, fold, writer)
+            loss_avg_train, metrics_train = train(dataloader_train, model, criterion, optimizer, scheduler, epoch, fold, writer)
             auc_train = metrics_train["auc_roc"]
             print("Avg loss:", loss_avg_train)
             print("auc:", auc_train)
