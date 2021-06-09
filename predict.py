@@ -9,7 +9,7 @@ import dataset
 import seti_model
 
 
-def predict(dataloader, model):
+def predict(dataloader, model, calculate_embeddings):
     model.eval()
 
     # Pseudo labelling stats
@@ -18,6 +18,7 @@ def predict(dataloader, model):
     pseudo_1_99 = 0
     pseudo_0_01 = 0
 
+    all_embeddings = []
     all_probs = np.array([])
     all_labels = np.array([])
     all_npy_paths = []
@@ -32,6 +33,12 @@ def predict(dataloader, model):
         with torch.no_grad():
             outputs = model(inputs)
             probs = torch.sigmoid(outputs)
+
+            if calculate_embeddings is True:
+                embeddings = model.model(inputs)
+
+        if calculate_embeddings is True:
+            all_embeddings.append(embeddings.cpu().detach().numpy())
         all_probs = np.concatenate([all_probs, probs[:, 0].cpu().detach().numpy()])
 
         pseudo_1_95 += (probs[probs > 0.95] > 0).sum()
@@ -42,16 +49,19 @@ def predict(dataloader, model):
         print('\r', "Progress {}".format(index), end='')
         if config.debug is True:
             break
+
+    if calculate_embeddings is True:
+        all_embeddings = np.concatenate(all_embeddings)
     print()
     print("pseudo_1_95", pseudo_1_95)
     print("pseudo_1_99", pseudo_1_99)
     print("pseudo_0_05", pseudo_0_05)
     print("pseudo_0_01", pseudo_0_01)
 
-    return all_probs, all_labels, all_npy_paths
+    return all_probs, all_labels, all_npy_paths, all_embeddings
 
 
-def get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test):
+def get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test, calculate_embeddings):
     # Get checkpoint and dataset settings
     checkpoint = load_checkpoint(checkpoint_path)
     in_channels = checkpoint["model"]["in_channels"] if "in_channels" in checkpoint["model"] else 6
@@ -83,8 +93,8 @@ def get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test):
     print("Model on GPU:", next(model.parameters()).is_cuda)
 
     # Get preds
-    probs, labels, npy_paths = predict(dataloader_test, model)
-    return probs, labels, npy_paths
+    probs, labels, npy_paths, embeddings = predict(dataloader_test, model, calculate_embeddings)
+    return probs, labels, npy_paths, embeddings
 
 
 def get_ensemble_preds(checkpoint_paths, test_csv_path):
@@ -98,7 +108,7 @@ def get_ensemble_preds(checkpoint_paths, test_csv_path):
     ensemble_labels, ensemble_npy_paths = None, None
     for checkpoint_path in checkpoint_paths:
         models_amount += 1
-        probs, labels, npy_paths = get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test)
+        probs, labels, npy_paths, _ = get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test, calculate_embeddings=False)
         ensemble_labels, ensemble_npy_paths = labels, npy_paths
         ensemble_probs += probs
     ensemble_probs /= float(models_amount)
@@ -139,9 +149,10 @@ def load_checkpoint(checkpoint_path):
 
 def load_model(checkpoint):
     model_name = checkpoint["model"]["name"]
-
     in_channels = checkpoint["model"]["in_channels"] if "in_channels" in checkpoint["model"] else 6
-    model = seti_model.SETIModel(model_name, in_channels=in_channels, num_classes=1, pretrained=False)
+    include_drop_block = checkpoint["model"]["include_drop_block"] if "include_drop_block" in checkpoint["model"] else False
+
+    model = seti_model.SETIModel(model_name, in_channels=in_channels, num_classes=1, pretrained=False, include_drop_block=include_drop_block)
     model = model.to(device=config.device)
     print("Model loaded successfully")
 
@@ -182,7 +193,12 @@ if __name__ == "__main__":
     # run_name = "Jun03_16-13-45_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[9.687047294418406]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
     # run_name = "Jun05_18-53-18_model=tf_efficientnetv2_s_in21k_pretrained=T_c=2_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
     # run_name = "Jun06_15-26-26_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
-    run_name = "Jun06_23-43-54_model=tf_efficientnetv2_s_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
+    # run_name = "Jun06_23-43-54_model=tf_efficientnetv2_s_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
+    # run_name = "Jun07_11-58-10_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_MotionBLur"
+    # run_name = "Jun07_19-55-34_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
+    # run_name = "Jun08_10-33-44_model=resnet18d_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=256_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
+    # run_name = "Jun08_19-03-54_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly"
+    run_name = "Jun09_13-06-23_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=OneCycleLR_MixUp1.0_SpecAugWZeros_3Aonly"
 
     best_metric = "best_loss_val"
     cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)
