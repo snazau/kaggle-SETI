@@ -191,6 +191,9 @@ def visualize_top_preds(checkpoints_paths, labels_csv_path, visualization_dir, v
 
 
 def visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity):
+    # Core code was taken from:
+    # https://www.kaggle.com/ttahara/eda-seti-e-t-train-v-s-test-by-cnn-embeddings#Extract-Embeddings-(and-Prediction)
+
     if not os.path.exists(visualization_dir):
         os.makedirs(visualization_dir)
 
