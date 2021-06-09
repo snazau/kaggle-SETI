@@ -66,6 +66,17 @@ def time_mask(spec, T=40, num_masks_per_channel=None, replace_with_zero=False):
     return cloned
 
 
+def random_cadence_permutation(spec):
+    cloned = copy.deepcopy(spec)
+    # 6 channels are - ABACAD,
+    # where A - location that we are interested in
+    # where B, C, D - other location
+    permutation = 2 * np.random.permutation([1, 2, 3]) - 1
+    permutation = [0, permutation[0], 2, permutation[1], 4, permutation[2]]
+    cloned = cloned[permutation]
+    return cloned
+
+
 def coarse_dropout(spec, max_holes=8, max_height=8, max_width=8, min_holes=8, min_height=8, min_width=8, fill_value=0, p=0.5):
     cloned = copy.deepcopy(spec)
     transform = A.CoarseDropout(
@@ -91,6 +102,29 @@ def motion_blur(spec, p=0.5):
     channels = spec.shape[0]
     for channel_num in range(channels):
         cloned[channel_num] = transform(image=cloned[channel_num])["image"]
+    return cloned
+
+
+def shift_scale_rotate(spec, p=0.5):
+    cloned = copy.deepcopy(spec)
+    transform = A.ShiftScaleRotate(
+        p=p,
+        shift_limit_x=(-0.1, 0.1),
+        shift_limit_y=(-0.1, 0.1),
+        scale_limit=(-0.1, 0.1),
+        rotate_limit=(-10, 10),
+        interpolation=1,
+        border_mode=0,
+        value=0,
+    )
+    cloned[0] = transform(image=cloned[0])["image"]
+    return cloned
+
+
+def flip(spec, p=0.5):
+    cloned = copy.deepcopy(spec)
+    transform = A.Flip(p=p)
+    cloned[0] = transform(image=cloned[0])["image"]
     return cloned
 
 
@@ -141,7 +175,7 @@ if __name__ == "__main__":
         npy_paths,
         in_channels=1,
         desired_image_size=256,
-        augment=True,
+        augment=False,
         normalize=False,
     )
 
@@ -172,6 +206,16 @@ if __name__ == "__main__":
     # signal_blurred = motion_blur(signal.numpy(), p=1)
     # sample["tensor"] = torch.from_numpy(signal_blurred)
     # visualization.visualize_sample(sample)
+
+    # ShiftScaleRotate check
+    signal_transformed = shift_scale_rotate(signal.numpy(), p=1)
+    sample["tensor"] = torch.from_numpy(signal_transformed)
+    visualization.visualize_sample(sample)
+
+    # Flip check
+    signal_transformed = flip(signal.numpy(), p=1)
+    sample["tensor"] = torch.from_numpy(signal_transformed)
+    visualization.visualize_sample(sample)
 
     # # FMix check - prbbly not good for that task
     # # mixup check
