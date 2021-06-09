@@ -109,10 +109,10 @@ class SETIDataset(torch.utils.data.Dataset):
             # signal = (signal - signal_mins_channelwise) / (signal_maxs_channelwise - signal_mins_channelwise)
 
         if self.in_channels == 6:
-            print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # print()
             signal = np.pad(signal, ((0, 0), (0, 0), (0, self.desired_image_size - width)), 'constant')  # [6 x 273 x 273]
-            print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
+            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
         elif self.in_channels == 1:
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             # signal = np.vstack(signal).transpose((1, 0))
