@@ -36,8 +36,10 @@ mixup_alpha = 1.0
 criterion_name = "BCE"  # {"BCE", "Focal"}
 
 # lr
-lr_scheduler_name = "OneCycleLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR", "OneCycleLR"]
-weight_decay = 1e-6
+optimizer_name = "AdamW"  # {"Adam", "AdamW"}
+weight_decay = 1e-3
+
+lr_scheduler_name = "CosineAnnealingLR"  # ["ReduceLROnPlateau" | "CosineAnnealingLR", "OneCycleLR"]
 lr = 5e-4
 lr_reduce_on_plateau_factor = 0.5
 lr_reduce_on_plateau_patience = 3
@@ -50,7 +52,7 @@ lr_cycle_div_factor = lr_cycle_max_lr / lr
 lr_cycle_final_div_factor = 1e3
 lr_cycle_epochs = epochs_amount
 
-run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_{}".format(
+run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz={}_lr={}_bs={}_weights={}_loss={}_scheduler={}_opt={}_{}".format(
     curr_date,
     model_name,
     str(model_pretrained)[0],
@@ -64,7 +66,8 @@ run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz=
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
-    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros_3Aonly",
+    optimizer_name,
+    mix_strategy + str(mixup_alpha) + "_SpecAugWZeros",
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

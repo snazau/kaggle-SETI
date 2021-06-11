@@ -296,7 +296,14 @@ if __name__ == "__main__":
             raise NotImplementedError
 
         # Optimizer
-        optimizer = torch.optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
+        if config.optimizer_name == "Adam":
+            optimizer = torch.optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
+        elif config.optimizer_name == "AdamW":
+            optimizer = torch.optim.AdamW(model.parameters(), config.lr, weight_decay=config.weight_decay)
+        else:
+            raise NotImplementedError
+
+        # Scheduler
         scheduler = None
         if config.lr_scheduler_name is not None:
             if config.lr_scheduler_name == "ReduceLROnPlateau":
