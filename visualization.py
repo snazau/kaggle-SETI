@@ -4,6 +4,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.express as px
 import torch
 
 import config
@@ -207,8 +208,12 @@ def visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity):
         checkpoint_path,
         labels_train,
         npy_paths_train,
-        calculate_embeddings=True
     )
+    df_train["target"] = labels_train
+    df_train["pred"] = probs_train
+    fig = px.histogram(df_train, x="pred")
+    fig.show()
+    print("df_train", df_train.shape)
     print("embeddings_train", embeddings_train.shape)
 
     # Get test embeddings
@@ -221,18 +226,22 @@ def visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity):
         checkpoint_path,
         labels_test,
         npy_paths_test,
-        calculate_embeddings=True
     )
+    df_test["target"] = labels_test
+    df_test["pred"] = probs_test
+    fig = px.histogram(df_test, x="pred")
+    fig.show()
+    print("df_test", df_test.shape)
     print("embeddings_test", embeddings_test.shape)
 
     # Grouping
     all_df = pd.concat([df_train, df_test], axis=0, ignore_index=True)
-    all_df["target"].value_counts()
+    print("target value counts", all_df["target"].value_counts())
     all_df["data_type"] = ""
     all_df.loc[all_df["target"] == 1.0, "data_type"] = "train_pos"
     all_df.loc[all_df["target"] == 0.0, "data_type"] = "train_neg"
     all_df.loc[all_df["target"] == 0.5, "data_type"] = "test"
-    all_df["data_type"].value_counts()
+    print("data_type value counts", all_df["data_type"].value_counts())
 
     # tsne
     all_embeddings = np.concatenate([embeddings_train, embeddings_test], axis=0)
@@ -247,6 +256,26 @@ def visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity):
     neg_embeddings_2d = all_embeddings_2d[all_df.query("data_type == 'train_neg'").index.values]
     pos_embeddings_2d = all_embeddings_2d[all_df.query("data_type == 'train_pos'").index.values]
     test_embeddings_2d = all_embeddings_2d[all_df.query("data_type == 'test'").index.values]
+    df_test["emb2d_1"] = test_embeddings_2d[:, 0]
+    fig = px.histogram(df_test, x="emb2d_1")
+    fig.show()
+
+    df_test["emb2d_2"] = test_embeddings_2d[:, 1]
+    fig = px.histogram(df_test, x="emb2d_2")
+    fig.show()
+
+    test_embeddings = all_embeddings[all_df.query("data_type == 'test'").index.values]
+    df_test["emb_1"] = test_embeddings[:, 0]
+    fig = px.histogram(df_test, x="emb_1")
+    fig.show()
+
+    df_test["emb_2"] = test_embeddings[:, 1]
+    fig = px.histogram(df_test, x="emb_2")
+    fig.show()
+
+    print("neg_embeddings_2d", neg_embeddings_2d.shape)
+    print("pos_embeddings_2d", pos_embeddings_2d.shape)
+    print("test_embeddings_2d", test_embeddings_2d.shape)
 
     # Plot train 2d embeddings
     fig = plt.figure(figsize=(30, 10))
@@ -258,7 +287,7 @@ def visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity):
     ax_neg.legend(fontsize=13)
     ax_neg.set_title("train_negative", fontsize=18)
 
-    ax_pos.scatter(pos_embeddings_2d[:, 0], pos_embeddings_2d[:, 1], color="blue", s=10, label="", alpha=0.3)
+    ax_pos.scatter(pos_embeddings_2d[:, 0], pos_embeddings_2d[:, 1], color="blue", s=10, label="train_positive", alpha=0.3)
     ax_pos.legend(fontsize=13)
     ax_pos.set_title("train_positive", fontsize=18)
 
@@ -317,7 +346,9 @@ if __name__ == "__main__":
     # visualize_train_data(labels_csv_path, visualization_dir)
 
     # run_name = "May21_20-12-15_model=tf_efficientnetv2_s_in21k_pretrained=True_aug=True_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    run_name = "May31_23-03-41_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp"
+    # run_name = "May31_23-03-41_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp"
+    # run_name = "Jun08_19-03-54_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly"
+    run_name = "Jun08_10-33-44_model=resnet18d_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=256_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
 
     # Visualize embeddings
     checkpoints_dir = "/media/tower/nvme/kaggle/SETI_bin_Class/checkpoints/" + run_name + "/fold5"
@@ -325,7 +356,8 @@ if __name__ == "__main__":
     # checkpoints_paths = [checkpoint_path]
 
     visualization_dir = os.path.join(".", "visualization", "embeddings_" + run_name)
-    visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity=50.0)
+    # visualization_dir = os.path.join(".", "visualization", "embeddings_random_model")
+    visualize_embeddings(checkpoint_path, visualization_dir, tsne_perplexity=10.0)
 
     # Visualize top preds
     # best_metric = "best_loss_val"
