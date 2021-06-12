@@ -79,28 +79,26 @@ class SETIDataset(torch.utils.data.Dataset):
                 signal = augmentations.random_cadence_permutation(signal)
             # exit()
 
-        if self.normalize is True:
-            # print("Normalizing")
-
-            # wtf norm
-            # # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
-            # signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
-            # signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
-            # # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
-            # # signal = ((np.clip(signal, -1, 3) + 1) / 4 * 255).astype(np.uint8)
-            # signal = (np.clip(signal, -1, 3) + 1) / 4
-            # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
-            # signal = (signal - signal.min()) / (signal.max() - signal.min())
-            # exit()
-
-            # meanstd norm - seems like better than wo normalization
+        if self.normalize == "meanstd_ds":
+            # mean/std calculated over whole dataset
             signal = (signal - self.signal_mean) / self.signal_std
-
+        elif self.normalize == "meanstd_s":
+            # mean/std calculated over sample
+            signal_mean, signal_std = signal.mean(), signal.std()
+            signal = (signal - signal_mean) / signal_std
+        elif self.normalize == "logscale":
             # log scale - worse than wo normalization
-            # signal_mins_channelwise = signal.min(axis=(1, 2), keepdims=True)
-            # signal_maxs_channelwise = signal.max(axis=(1, 2), keepdims=True)
-            # signal = np.log(signal - signal_mins_channelwise + 1e-7)
-            # signal = (signal - signal_mins_channelwise) / (signal_maxs_channelwise - signal_mins_channelwise)
+            signal_mins_channelwise = signal.min(axis=(1, 2), keepdims=True)
+            signal_maxs_channelwise = signal.max(axis=(1, 2), keepdims=True)
+            signal = np.log(signal - signal_mins_channelwise + 1e-7)
+            signal = (signal - signal_mins_channelwise) / (signal_maxs_channelwise - signal_mins_channelwise)
+        elif self.normalize == "wtfnorm":
+            # wtf norm
+            signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
+            signal = ((signal - np.mean(signal, axis=0)) / (np.std(signal, axis=0) + 1e-7)).T
+            # signal = ((np.clip(signal, -1, 3) + 1) / 4 * 255).astype(np.uint8)
+            signal = (np.clip(signal, -1, 3) + 1) / 4
+            # signal = (signal - signal.min()) / (signal.max() - signal.min())
 
         if self.in_channels == 6:
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
@@ -169,7 +167,7 @@ if __name__ == "__main__":
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
 
-    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, interpolation=cv2.INTER_AREA, augment=True, normalize=True)
+    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, interpolation=cv2.INTER_AREA, augment=True, normalize="meanstd_ds")
     showed_amount = 0
     for sample in dataset:
         # rand_index = random.randint(0, len(dataset) - 1)

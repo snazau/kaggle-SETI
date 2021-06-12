@@ -17,7 +17,7 @@ in_channels = 1  # {1, 2, 6}
 desired_image_size = 448  # 273 for 6 channels, anything for 1 channel
 interpolation = cv2.INTER_CUBIC
 augment = True
-normalize = True
+normalize = "meanstd_ds"
 
 # Training process
 debug = False
@@ -64,7 +64,7 @@ run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_interp={}_aug
     str(desired_image_size),
     str(interpolation),
     str(augment)[0],
-    "meanstd" if normalize is True else str(normalize)[0],
+    normalize,
     str(lr),
     str(batch_size * accumulation_steps),
     str(pos_weights_train),
