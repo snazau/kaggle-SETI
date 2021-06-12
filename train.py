@@ -193,6 +193,7 @@ def save_checkpoint(save_checkpoint_path, epoch, model, loss_avg_train, loss_avg
             "normalize": config.normalize,
             "in_channels": config.in_channels,
             "desired_image_size": config.desired_image_size,
+            "interpolation": config.interpolation,
             "name": config.model_name,
             "state_dict": model.state_dict()
         },
@@ -246,6 +247,7 @@ if __name__ == "__main__":
             npy_paths_train,
             in_channels=config.in_channels,
             desired_image_size=config.desired_image_size,
+            interpolation=config.interpolation,
             augment=config.augment,
             normalize=config.normalize
         )
@@ -264,6 +266,7 @@ if __name__ == "__main__":
             npy_paths_val,
             in_channels=config.in_channels,
             desired_image_size=config.desired_image_size,
+            interpolation=config.interpolation,
             augment=False,
             normalize=config.normalize
         )

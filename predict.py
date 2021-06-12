@@ -1,3 +1,4 @@
+import cv2
 import os
 import numpy as np
 import pandas as pd
@@ -61,6 +62,7 @@ def get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test):
     checkpoint = load_checkpoint(checkpoint_path)
     in_channels = checkpoint["model"]["in_channels"] if "in_channels" in checkpoint["model"] else 6
     desired_image_size = checkpoint["model"]["desired_image_size"] if "desired_image_size" in checkpoint["model"] else 273
+    interpolation = checkpoint["model"]["interpolation"] if "interpolation" in checkpoint["model"] else cv2.INTER_AREA
     normalize = checkpoint["model"]["normalize"] if "normalize" in checkpoint["model"] else False
 
     # Get dataset and dataloader
@@ -69,6 +71,7 @@ def get_preds_from_checkpoint(checkpoint_path, labels_test, npy_paths_test):
         npy_paths_test,
         in_channels=in_channels,
         desired_image_size=desired_image_size,
+        interpolation=interpolation,
         normalize=normalize,
         augment=False,
     )
@@ -154,12 +157,14 @@ def load_model(checkpoint):
     model.load_state_dict(checkpoint["model"]["state_dict"])
 
     desired_image_size = checkpoint["model"]["desired_image_size"] if "desired_image_size" in checkpoint["model"] else 273
+    interpolation = checkpoint["model"]["interpolation"] if "interpolation" in checkpoint["model"] else cv2.INTER_AREA
     normalize = checkpoint["model"]["normalize"] if "normalize" in checkpoint["model"] else False
     print("Loaded weights into model")
     print("model_name", model_name)
     print("epoch", checkpoint["epoch"])
     print("in_channels", in_channels)
     print("desired_image_size", desired_image_size)
+    print("interpolation", interpolation)
     print("normalize", normalize)
     print("val_loss", checkpoint["val_loss"])
     print("train_loss", checkpoint["train_loss"])
@@ -173,30 +178,7 @@ if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
 
-    # run_name = "May17_17-54-12_model=dm_nfnet_f0_lr=0.0001_posweights=[9.687047294418406]_loss=BCE"
-    # run_name = "May21_01-00-37_model=dm_nfnet_f0_pretrained=True_aug=True_lr=0.0001_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    # run_name = "May20_19-20-31_model=efficientnet_b0_pretrained=True_aug=True_lr=0.0005_bs=64_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    # run_name = "May21_20-12-15_model=tf_efficientnetv2_s_in21k_pretrained=True_aug=True_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    # run_name = "May30_00-15-15_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR"
-    # run_name = "May30_16-58-16_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_addCoarseDropout"
-    # run_name = "May30_23-34-30_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_CoarseDropout_RndPermut"
-    # run_name = "May31_15-58-20_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_ClsfDropout"
-    # run_name = "May31_23-03-41_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp"
-    # run_name = "Jun01_22-35-32_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp0.4"
-    # run_name = "Jun02_12-32-52_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp5.0"
-    # run_name = "Jun02_23-17-22_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=Focal_scheduler=CosineAnnealingLR_MixUp1.0"
-    # run_name = "Jun03_16-13-45_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[9.687047294418406]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
-    # run_name = "Jun05_18-53-18_model=tf_efficientnetv2_s_in21k_pretrained=T_c=2_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0"
-    # run_name = "Jun06_15-26-26_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
-    # run_name = "Jun06_23-43-54_model=tf_efficientnetv2_s_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
-    # run_name = "Jun07_11-58-10_model=tf_efficientnetv2_s_in21k_pretrained=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_MotionBLur"
-    # run_name = "Jun07_19-55-34_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=T_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
-    # run_name = "Jun08_10-33-44_model=resnet18d_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=256_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros"
-    # run_name = "Jun08_19-03-54_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly"
-    # run_name = "Jun09_13-06-23_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=OneCycleLR_MixUp1.0_SpecAugWZeros_3Aonly"
-    # run_name = "Jun10_00-04-42_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly_CUBIC_replacedFlip"
-    # run_name = "Jun10_12-25-22_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly_CUBIC"
-    run_name = "Jun10_22-15-10_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_aug=T_nrmlz=meanstd_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_MixUp1.0_SpecAugWZeros_3Aonly_replacedFlip"
+    run_name = "Jun12_01-59-09_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=320_aug=T_nrmlz=meanstd_lr=0.0005_bs=16_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_opt=AdamW_MixUp1.0_SpecAugWZeros"
 
     best_metric = "best_loss_val"
     cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)

@@ -11,11 +11,12 @@ import visualization
 
 
 class SETIDataset(torch.utils.data.Dataset):
-    def __init__(self, labels, npy_paths, in_channels, desired_image_size, augment, normalize, transforms=None):
+    def __init__(self, labels, npy_paths, in_channels, desired_image_size, interpolation, augment, normalize, transforms=None):
         self.labels = labels
         self.npy_paths = npy_paths
         self.in_channels = in_channels
         self.desired_image_size = desired_image_size
+        self.interpolation = interpolation
         self.augment = augment
         self.transforms = transforms
         self.normalize = normalize
@@ -66,11 +67,11 @@ class SETIDataset(torch.utils.data.Dataset):
                 )
 
             # Random vertical flip
-            if random.uniform(0, 1) < 0:
+            if random.uniform(0, 1) < 0.5:
                 signal = np.flip(signal, axis=1)
 
             # Random horizontal flip
-            if random.uniform(0, 1) < 0:
+            if random.uniform(0, 1) < 0.5:
                 signal = np.flip(signal, axis=2)
 
             # Random permutation of not important channels i.e, with indices [1, 3, 5]
@@ -108,12 +109,11 @@ class SETIDataset(torch.utils.data.Dataset):
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
         elif self.in_channels == 1:
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
-            # signal = np.vstack(signal).transpose((1, 0))
-            # signal = np.vstack(signal)
-            signal = np.vstack(signal[[0, 2, 4]])
+            signal = np.vstack(signal)
+            # signal = np.vstack(signal[[0, 2, 4]])
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             resized_shape = (self.desired_image_size, self.desired_image_size)
-            signal = cv2.resize(signal, resized_shape, interpolation=cv2.INTER_CUBIC)
+            signal = cv2.resize(signal, resized_shape, interpolation=self.interpolation)
 
             signal = signal[np.newaxis, :, :]
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
@@ -128,7 +128,7 @@ class SETIDataset(torch.utils.data.Dataset):
             signal = chw2hwc(signal)
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             resized_shape = (self.desired_image_size, self.desired_image_size)
-            signal = cv2.resize(signal, resized_shape, interpolation=cv2.INTER_CUBIC)
+            signal = cv2.resize(signal, resized_shape, interpolation=self.interpolation)
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
             signal = hwc2chw(signal)
             # print("signal", signal.shape, signal.min(), signal.mean(), signal.max())
@@ -142,7 +142,7 @@ class SETIDataset(torch.utils.data.Dataset):
             signal = augmentations.shift_scale_rotate(signal, p=0)
 
             # Flip
-            signal = augmentations.flip(signal, p=0.5)
+            signal = augmentations.flip(signal, p=0)
 
         sample = {
             "tensor": torch.from_numpy(signal),
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
 
-    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, augment=True, normalize=True)
+    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, interpolation=cv2.INTER_AREA, augment=True, normalize=True)
     showed_amount = 0
     for sample in dataset:
         # rand_index = random.randint(0, len(dataset) - 1)
