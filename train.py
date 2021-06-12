@@ -26,7 +26,6 @@ def train(dataloader, model, criterion, optimizer, scheduler, epoch, fold, write
         labels = sample["label"].to(config.device, config.dtype)
         npy_paths = sample["npy_path"]
 
-        optimizer.zero_grad()
         if config.mix_strategy is not None:
             if config.mix_strategy is "MixUp":
                 mixed_inputs, labels, labels_shuffled, lam = augmentations.mixup(inputs, labels, alpha=config.mixup_alpha)
@@ -39,12 +38,18 @@ def train(dataloader, model, criterion, optimizer, scheduler, epoch, fold, write
         else:
             outputs = model(inputs)
             loss = criterion(outputs, labels.unsqueeze(1))
+
+        loss = loss / config.accumulation_steps
         loss.backward()
-        optimizer.step()
+
+        if ((index + 1) % config.accumulation_steps == 0) or (index + 1 == len(dataloader)):
+            optimizer.step()
+            optimizer.zero_grad()
+
         if config.lr_scheduler_name == "OneCycleLR":
             scheduler.step()
 
-        loss_avg += loss.item()
+        loss_avg += loss.item() * config.accumulation_steps
 
         if config.mix_strategy is not None:
             with torch.no_grad():
@@ -106,7 +111,9 @@ def validate(dataloader, model, criterion, optimizer, epoch, fold, writer):
 
         if config.mix_strategy is None:
             loss = criterion(outputs, labels.unsqueeze(1))
-        loss_avg += loss.item()
+
+        loss = loss / config.accumulation_steps
+        loss_avg += loss.item() * config.accumulation_steps
 
         all_labels = np.concatenate([all_labels, labels.cpu().detach().numpy()])
         all_probs = np.concatenate([all_probs, probs[:, 0].cpu().detach().numpy()])

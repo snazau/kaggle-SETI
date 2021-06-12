@@ -13,7 +13,7 @@ include_drop_block = False
 
 # Dataset settings
 in_channels = 1  # {1, 2, 6}
-desired_image_size = 256  # 273 for 6 channels, anything for 1 channel
+desired_image_size = 320  # 273 for 6 channels, anything for 1 channel
 augment = True
 normalize = True
 
@@ -25,7 +25,8 @@ print_freq = 300
 
 cv_splits_amount = 5
 epochs_amount = 10
-batch_size = 32
+batch_size = 16
+accumulation_steps = 2
 test_batch_size = 128
 n_loader_workers = 4
 
@@ -62,7 +63,7 @@ run_description = "{}_model={}_pretrained={}_dropB={}_c={}_size={}_aug={}_nrmlz=
     str(augment)[0],
     "meanstd" if normalize is True else str(normalize)[0],
     str(lr),
-    str(batch_size),
+    str(batch_size * accumulation_steps),
     str(pos_weights_train),
     criterion_name,
     lr_scheduler_name,
