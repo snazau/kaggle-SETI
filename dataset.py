@@ -3,10 +3,12 @@ import numpy as np
 import os
 import pandas as pd
 import random
+import sklearn
 import torch
 
-import config
 import augmentations
+import config
+import nmt_processing
 import visualization
 
 
@@ -20,6 +22,13 @@ class SETIDataset(torch.utils.data.Dataset):
         self.augment = augment
         self.transforms = transforms
         self.normalize = normalize
+        self.model_nmf = sklearn.decomposition.NMF(
+            init='random',
+            n_components=2,
+            solver='mu',
+            alpha=0.01,
+            random_state=None if config.deterministic is False else config.seed
+        )
 
         self.signal_mean = np.load(os.path.join(config.data_dir, "train_mean.npy")).astype(np.float32)
         self.signal_std = np.load(os.path.join(config.data_dir, "train_std.npy")).astype(np.float32)
@@ -30,6 +39,9 @@ class SETIDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         signal = np.load(self.npy_paths[index]).astype(np.float32)  # [6 x 273 x 256]
         channel_amount, height, width = signal.shape
+
+        if self.normalize == "nmt":
+            signal = nmt_processing.preprocess_cadence(signal, self.model_nmf)
 
         # Channel wise augmentations
         if self.augment is True:
@@ -167,7 +179,7 @@ if __name__ == "__main__":
     labels = list(labels_df["target"])
     npy_paths = list(labels_df["path"])
 
-    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, interpolation=cv2.INTER_AREA, augment=True, normalize="meanstd_ds")
+    dataset = SETIDataset(labels, npy_paths, in_channels=1, desired_image_size=512, interpolation=cv2.INTER_AREA, augment=False, normalize="nmt")
     showed_amount = 0
     for sample in dataset:
         # rand_index = random.randint(0, len(dataset) - 1)
@@ -177,5 +189,5 @@ if __name__ == "__main__":
             visualization.visualize_sample(sample)
             showed_amount += 1
 
-        if showed_amount == 5:
+        if showed_amount == 10:
             break

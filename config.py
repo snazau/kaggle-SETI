@@ -14,10 +14,10 @@ include_drop_block = False
 
 # Dataset settings
 in_channels = 1  # {1, 2, 6}
-desired_image_size = 448  # 273 for 6 channels, anything for 1 channel
-interpolation = cv2.INTER_CUBIC
+desired_image_size = 256  # 273 for 6 channels, anything for 1 channel
+interpolation = cv2.INTER_AREA
 augment = True
-normalize = "meanstd_ds"
+normalize = "nmt"
 
 # Training process
 debug = False
@@ -26,8 +26,8 @@ seed = 8
 
 cv_splits_amount = 5
 epochs_amount = 10
-batch_size = 16
-accumulation_steps = 2
+batch_size = 32
+accumulation_steps = 1
 test_batch_size = 128
 n_loader_workers = 4
 print_freq = 300 * accumulation_steps
