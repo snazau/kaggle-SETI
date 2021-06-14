@@ -2,6 +2,7 @@ import cv2
 import os
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import torch
 
 
@@ -116,6 +117,8 @@ def get_ensemble_preds(checkpoint_paths, test_csv_path):
         'target': ensemble_probs,
     }
     df_submission = pd.DataFrame(data_submission, columns=['id', 'target'])
+    fig = px.histogram(df_submission, x="target")
+    fig.show()
 
     return ensemble_probs, ensemble_labels, ensemble_npy_paths, df_submission
 
@@ -178,7 +181,8 @@ if __name__ == "__main__":
     import __main__
     print("Run of", __main__.__file__)
 
-    run_name = "Jun12_01-59-09_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=320_aug=T_nrmlz=meanstd_lr=0.0005_bs=16_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_opt=AdamW_MixUp1.0_SpecAugWZeros"
+    # run_name = "Jun13_00-33-28_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=448_interp=2_aug=T_nrmlz=meanstd_ds_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_opt=Adam_MixUp1.0_SpecAugWZeros"
+    run_name = "Jun13_23-32-34_model=tf_efficientnetv2_s_in21k_pretrained=T_dropB=F_c=1_size=256_interp=3_aug=T_nrmlz=nmt_lr=0.0005_bs=32_weights=[1.0]_loss=BCE_scheduler=CosineAnnealingLR_opt=Adam_MixUp1.0_SpecAugWZeros"
 
     best_metric = "best_loss_val"
     cv_checkpoints_dir = os.path.join(".", "checkpoints", run_name)
